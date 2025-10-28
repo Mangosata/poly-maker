@@ -56,7 +56,20 @@ def process_data(json_datas, trade=True):
                 asyncio.create_task(perform_trade(asset))
                 
         elif event_type == 'price_change':
-            for data in json_data['changes']:
+            changes_payload = json_data.get('changes')
+            if changes_payload is None:
+                changes_payload = json_data.get('price_changes')
+
+            if changes_payload is None:
+                print(f"Warning: price_change event missing changes payload: {json_data}")
+                continue
+
+            if isinstance(changes_payload, dict):
+                changes_iterable = [changes_payload]
+            else:
+                changes_iterable = changes_payload
+
+            for data in changes_iterable:
                 side = 'bids' if data['side'] == 'BUY' else 'asks'
                 price_level = float(data['price'])
                 new_size = float(data['size'])
