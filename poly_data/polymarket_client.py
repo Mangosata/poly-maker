@@ -54,7 +54,7 @@ class PolymarketClient:
         # Don't print sensitive wallet information
         print("Initializing Polymarket client...")
         chain_id=POLYGON
-        self.browser_wallet=Web3.toChecksumAddress(browser_address)
+        self.browser_wallet = Web3.to_checksum_address(browser_address)
 
         # Initialize the Polymarket API client
         self.client = ClobClient(
@@ -161,15 +161,43 @@ class PolymarketClient:
         """
         return self.usdc_contract.functions.balanceOf(self.browser_wallet).call() / 10**6
      
-    def get_pos_balance(self):
+    def get_pos_balance(self, return_details: bool = False):
         """
         Get the total value of all positions for the connected wallet.
         
+        Args:
+            return_details (bool): When True, also return the raw API payload.
+        
         Returns:
-            float: Total position value in USDC
+            float or tuple: position value, optionally with raw response content
         """
         res = requests.get(f'https://data-api.polymarket.com/value?user={self.browser_wallet}')
-        return float(res.json()['value'])
+
+        try:
+            data = res.json()
+        except ValueError:
+            data = res.text
+            value = 0.0
+        else:
+            value = 0.0
+
+            if isinstance(data, dict):
+                if 'value' in data:
+                    try:
+                        value = float(data['value'])
+                    except (TypeError, ValueError):
+                        value = 0.0
+            elif isinstance(data, list) and data:
+                first = data[0]
+                if isinstance(first, dict) and 'value' in first:
+                    try:
+                        value = float(first['value'])
+                    except (TypeError, ValueError):
+                        value = 0.0
+
+        if return_details:
+            return value, data
+        return value
 
     def get_total_balance(self):
         """

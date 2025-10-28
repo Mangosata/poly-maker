@@ -47,3 +47,10 @@ orders = {}
 # Format: {token_id: {'size': float, 'avgPrice': float}}
 positions = {}
 
+# ============ Testing & Overrides ============
+
+# Optional trade size override for testing (float or None)
+test_trade_size = None
+
+# When True, trading modules should avoid sending live orders
+dry_run = False

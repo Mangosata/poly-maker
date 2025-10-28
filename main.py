@@ -3,6 +3,7 @@ import time                    # Time functions
 import asyncio                 # Asynchronous I/O
 import traceback               # Exception handling
 import threading               # Thread management
+import os                      # Environment variables
 
 from poly_data.polymarket_client import PolymarketClient
 from poly_data.data_utils import update_markets, update_positions, update_orders
@@ -82,6 +83,20 @@ async def main():
     """
     # Initialize client
     global_state.client = PolymarketClient()
+    
+    # Configure optional testing behaviour
+    test_trade_size_env = os.getenv("TEST_TRADE_SIZE")
+    if test_trade_size_env:
+        try:
+            global_state.test_trade_size = float(test_trade_size_env)
+            print(f"Using test trade size override: {global_state.test_trade_size}")
+        except ValueError:
+            print(f"Invalid TEST_TRADE_SIZE '{test_trade_size_env}', ignoring override")
+
+    dry_run_env = os.getenv("DRY_RUN", "false").lower()
+    global_state.dry_run = dry_run_env in ("1", "true", "yes", "on")
+    if global_state.dry_run:
+        print("Running in DRY_RUN mode. No live orders will be sent.")
     
     # Initialize state and fetch initial data
     global_state.all_tokens = []
