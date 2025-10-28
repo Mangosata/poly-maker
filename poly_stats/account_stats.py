@@ -31,7 +31,7 @@ def get_all_orders(client):
         orders_df = orders_df.rename(columns={'side': 'order_side', 'price': 'order_price'})
         return orders_df
     else:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=['asset_id', 'order_size', 'order_side', 'order_price'])
     
 def get_all_positions(client):
     try:
