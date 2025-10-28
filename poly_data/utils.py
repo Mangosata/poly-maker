@@ -3,8 +3,38 @@ from poly_utils.google_utils import get_spreadsheet
 import pandas as pd 
 import os
 
+
 def pretty_print(txt, dic):
     print("\n", txt, json.dumps(dic, indent=4))
+
+
+def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Trim whitespace and normalise column names."""
+    if df.empty:
+        return df
+
+    renamed = {}
+    for col in df.columns:
+        if isinstance(col, str):
+            normalized = " ".join(col.strip().split())
+            renamed[col] = normalized
+        else:
+            renamed[col] = col
+    return df.rename(columns=renamed)
+
+
+def _ensure_column(df: pd.DataFrame, column: str) -> pd.DataFrame:
+    """Ensure dataframe contains required column (case-insensitive)."""
+    if column in df.columns:
+        return df
+
+    column_lower = column.lower()
+    for existing in df.columns:
+        if isinstance(existing, str) and existing.lower() == column_lower:
+            return df.rename(columns={existing: column})
+
+    raise KeyError(f"Required column '{column}' not found in sheet data. Columns: {list(df.columns)}")
+
 
 def get_sheet_df(read_only=None):
     """
@@ -31,10 +61,14 @@ def get_sheet_df(read_only=None):
 
     wk = spreadsheet.worksheet(sel)
     df = pd.DataFrame(wk.get_all_records())
+    df = _normalize_columns(df)
+    df = _ensure_column(df, 'question')
     df = df[df['question'] != ""].reset_index(drop=True)
 
     wk2 = spreadsheet.worksheet(all)
     df2 = pd.DataFrame(wk2.get_all_records())
+    df2 = _normalize_columns(df2)
+    df2 = _ensure_column(df2, 'question')
     df2 = df2[df2['question'] != ""].reset_index(drop=True)
 
     result = df.merge(df2, on='question', how='inner')
