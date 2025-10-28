@@ -31,16 +31,22 @@ def process_price_change(asset, side, price_level, new_size):
 
 def process_data(json_datas, trade=True):
 
+    if isinstance(json_datas, dict):
+        json_datas = [json_datas]
+
     for json_data in json_datas:
         if isinstance(json_data, str):
             print(f"Ignoring non-object websocket message: {json_data}")
             continue
 
-        if not isinstance(json_data, dict) or 'event_type' not in json_data:
+        if not isinstance(json_data, dict):
             print(f"Unexpected websocket payload: {json_data}")
             continue
 
-        event_type = json_data['event_type']
+        event_type = json_data.get('event_type')
+        if event_type is None:
+            print(f"Missing event_type in payload: {json_data}")
+            continue
         asset = json_data['market']
 
         if event_type == 'book':
