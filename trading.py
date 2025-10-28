@@ -263,6 +263,10 @@ async def perform_trade(market):
                 second_best_ask = deets['second_best_ask']
                 second_best_ask_size = deets['second_best_ask_size']
                 top_ask = deets['top_ask']
+
+                if best_bid is None or best_ask is None:
+                    print(f"Incomplete order book for token {token}. best_bid={best_bid}, best_ask={best_ask}. Skipping.")
+                    continue
                 
                 # Round prices to appropriate precision
                 best_bid = round(best_bid, round_length)
